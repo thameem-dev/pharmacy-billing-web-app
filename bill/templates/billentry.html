@@ -1,0 +1,435 @@
+{%load static%}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bill Entry</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- DataTables -->
+    <link rel="stylesheet"
+          href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .card {
+            border-radius: 10px;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+</head>
+
+<body class="bg-light">
+
+{% include 'navbar.html' %}
+
+<!-- ========================= BILL ENTRY SECTION ========================= -->
+<div class="container d-flex justify-content-center mt-2">
+    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 1000px;">
+        {% if messages %}
+        {% for message in messages %}
+          {% if message.tags == 'error' %}
+            <div class="alert alert-danger py-2 text-center">{{ message }}</div>
+          {% else %}
+            <div class="alert alert-success py-2 text-center">{{ message }}</div>
+          {% endif %}
+        {% endfor %}
+        {% endif %}
+        <h2  class="mb-3 text-center fw-bold text-primary">BILL ENTRY</h2>
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-4">
+                <label class="form-label">Medicine</label>
+                <select id="medicine" class="form-control">
+                    <option value="">Select</option>
+                    {% for m in stock %}
+                    <option 
+                        value="{{ m.mid.id }}"
+                        data-brand="{{ m.mid.brand }}"
+                        data-price="{{ m.unit_price }}"
+                    >
+                        {{ m.mid.medicine_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Brand</label>
+                <input type="text" id="brand" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Unit Price</label>
+                <input type="number" id="unit_price" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="qty" class="form-control">
+            </div>
+
+            <div class="col-md-1">
+                <button id="addBtn" class="btn btn-primary w-100">Add</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ========================= BILL TABLE SECTION ========================= -->
+<div class="container d-flex justify-content-center mt-2">
+    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 1000px;">
+
+        <table id="billTable" class="p-2 display table table-bordered table-striped w-100">
+            <thead class="table-dark">
+                <tr>
+                    <th>S.No</th>
+                    <th>Medicine</th>
+                    <th>Brand</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+
+    
+
+</div>
+
+<!-- ========================= BILL INFO SECTION ========================= -->
+<div class="container d-flex justify-content-center mt-2 mb-4">
+    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 1000px;">
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <label class="form-label">Bill No</label>
+                <input type="text" id="bill_no" class="form-control" 
+                       value="{{ bill_no }}" readonly>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Bill Date</label>
+                <input type="" id="bill_date" class="form-control"
+                       value="{{ bill_date }}" readonly>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Amount</label>
+                <input type="number" id="amount" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">GST (%)</label>
+                <input type="number" id="gst" class="form-control" value="18" readonly>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Grand Total</label>
+                <input type="number" id="grand_total" class="form-control" readonly>
+            </div>
+        
+            <!-- Save Button -->
+            <div class="col-md-4 d-flex justify-content-center align-items-end gap-2 mt-4">
+                <button id="saveBtn" class="btn btn-success">Save Bill</button>
+                <button id="printBtn" class="btn btn-primary">Print</button>
+            </div>
+            
+            
+            
+
+        </div>
+
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 9999">
+    <div id="snackbarToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="snackbarMessage">
+                Saved Successfully!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= PRINT MODAL ================= -->
+<div class="modal fade" id="printModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bill Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="printArea">
+                <!-- Content generated by JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary" id="confirmPrint">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= JAVASCRIPT ========================= -->
+<script>
+    function showSnackbar(message, color="success") {
+        const toastEl = document.getElementById("snackbarToast");
+        const messageEl = document.getElementById("snackbarMessage");
+    
+        // Change message
+        messageEl.textContent = message;
+    
+        // Change color (success, danger, warning, primary)
+        toastEl.className = `toast align-items-center text-white bg-${color} border-0`;
+    
+        // Show toast
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+
+    let stockData = [
+        {% for s in stock %}
+        {
+            id: "{{ s.mid.id }}",
+            name: "{{ s.mid.medicine_name }}",
+            brand: "{{ s.mid.brand }}",
+            qty: Number("{{ s.quantity }}"),
+            price: Number("{{ s.unit_price }}")
+        },
+        {% endfor %}
+    ];
+
+    let stockMap = {};
+    stockData.forEach(item => stockMap[item.id] = item);
+
+
+    let tempItems = [];
+    let table = $('#billTable').DataTable();
+
+    $("#medicine").change(function () {
+        let selected = $(this).find(":selected");
+        $("#brand").val(selected.data("brand"));
+        $("#unit_price").val(selected.data("price"));
+    });
+
+    // ADD ITEM
+    $("#addBtn").click(function () {
+
+        let mid = $("#medicine").val();
+        let name = $("#medicine option:selected").text();
+        let brand = $("#brand").val();
+        let price = Number($("#unit_price").val());
+        let qty = Number($("#qty").val());
+    
+        if (!mid || qty <= 0) {
+            showSnackbar("Please select medicine and enter valid quantity.", "danger");
+
+
+            return;
+        }
+    
+        if (!stockMap[mid]) {
+            alert("No stock found!");
+            return;
+        }
+    
+        let available = stockMap[mid].qty;
+    
+        let existingIndex = tempItems.findIndex(item => item.mid == mid);
+    
+        if (existingIndex !== -1) {
+    
+            let currentQty = tempItems[existingIndex].qty;
+            let newQty = currentQty + qty;
+    
+            if (newQty > available) {
+                showSnackbar("Insufficient stock! Available: " + available, "danger");
+                return;
+            }
+    
+            // Update temp record
+            tempItems[existingIndex].qty = newQty;
+            tempItems[existingIndex].total = newQty * price;
+    
+            // Update table row
+            let row = table.row(existingIndex);
+            row.data([
+                existingIndex + 1,
+                name,
+                brand,
+                newQty,
+                price,
+                newQty * price
+            ]).draw(false);
+    
+        } else {
+    
+            if (qty > available) {
+                showSnackbar("Insufficient stock! Available: " + available, "danger");
+                return;
+            }
+    
+            let total = qty * price;
+    
+            tempItems.push({
+                mid: mid,
+                medicine: name,
+                brand: brand,
+                qty: qty,
+                price: price,
+                total: total
+            });
+    
+            table.row.add([
+                tempItems.length,
+                name,
+                brand,
+                qty,
+                price,
+                total
+            ]).draw(false);
+        }
+    
+        stockData.find(item => item.id == mid).qty = stockData.find(item => item.id == mid).qty - qty;
+    
+        updateAmount();
+        $("#qty").val("");
+    });
+    
+
+    function updateAmount() {
+        let total = tempItems.reduce((sum, item) => sum + item.total, 0);
+        $("#amount").val(total);
+
+        let gst = 18;   // Always 18%
+        let grand = total + (total * 18 / 100);
+        $("#gst").val(18);
+        $("#grand_total").val(grand.toFixed(2));
+    }
+
+    $("#gst").keyup(updateAmount);
+
+
+    // SAVE BILL
+    $("#saveBtn").click(function () {
+
+        if (tempItems.length === 0) {
+            showSnackbar("No items added!", "danger");
+            return;
+        }
+
+        let billData = {
+            bill_no: $("#bill_no").val(),
+            bill_date: $("#bill_date").val(),
+            amount: $("#amount").val(),
+            gst: $("#gst").val(),
+            grand_total: $("#grand_total").val(),
+            items: tempItems
+        };
+
+$.ajax({
+    url: "/bill/billentry/",
+    method: "POST",
+    headers: { "X-CSRFToken": "{{ csrf_token }}" },
+    data: JSON.stringify(billData),
+    contentType: "application/json",
+    success: function(res) {
+        if (res.redirect_url) {
+            window.location.href = res.redirect_url;
+        }
+    }
+});
+    });
+
+    // ------------------ PRINT BILL ------------------
+$("#printBtn").click(function () {
+
+    if (tempItems.length === 0) {
+        showSnackbar("Add items before printing!", "danger");
+        return;
+    }
+
+    let html = `
+        <div class="text-center">
+            <h3 class="fw-bold">MEDX BILL</h3>
+            <hr>
+        </div>
+
+        <p><b>Bill No:</b> ${$("#bill_no").val()}</p>
+        <p><b>Bill Date:</b> ${$("#bill_date").val()}</p>
+
+        <table class="table table-bordered mt-3">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Medicine</th>
+                    <th>Brand</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tempItems.map((item, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${item.medicine}</td>
+                        <td>${item.brand}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.price}</td>
+                        <td>${item.total}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <h5 class="text-end mt-3"><b>Amount:</b> ₹${$("#amount").val()}</h5>
+        <h5 class="text-end"><b>GST:</b> ${$("#gst").val()}%</h5>
+        <h4 class="text-end"><b>Grand Total:</b> ₹${$("#grand_total").val()}</h4>
+    `;
+
+    $("#printArea").html(html);
+
+    let modal = new bootstrap.Modal(document.getElementById("printModal"));
+    modal.show();
+});
+
+
+// 🔹 PRINT ONLY THE BILL CONTENT
+$("#confirmPrint").click(function () {
+    let printContents = document.getElementById("printArea").innerHTML;
+    let printWindow = window.open("", "", "width=900,height=700");
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Bill Print</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        </head>
+        <body>
+            ${printContents}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+});
+
+</script>
+
+</body>
+</html>

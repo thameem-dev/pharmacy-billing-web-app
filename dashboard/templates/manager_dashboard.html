@@ -1,0 +1,317 @@
+{% comment %} <!DOCTYPE html>
+<html>
+    <head>
+        <title>Sales Chart</title>
+        
+        <!-- Bootstrap -->
+        <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    
+    <body class="bg-light">
+    {% include 'navbar.html' %}
+    <div class="container mt-4">
+      <div class="card shadow-lg border-0" 
+           style="border-radius: 18px; background: linear-gradient(135deg, #0A3D62, #1B98F5);">
+          
+          <div class="card-body text-center text-white p-5">
+    
+              <h2 class="fw-bold mb-2">
+                  👋 Welcome Mr. {{ request.user.username|title }}!
+              </h2>
+    
+              <p class="fs-5 mb-0">
+                  You are logged into <span class="fw-semibold">MedX Billing System</span>.
+              </p>
+    
+          </div>
+      </div>
+    </div>
+
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h3 class="text-center mb-3">CURRENT YEAR SALES</h3>
+
+        <canvas id="salesChart" style="height:300px !important;"></canvas>
+
+    </div>
+</div>
+
+
+<script>
+    let labels = [
+        {% for i in labels %}
+            "{{ i }}",
+        {% endfor %}
+    ];
+
+    let values = [
+        {% for i in values %}
+            {{ i }},
+        {% endfor %}
+    ];
+
+    const ctx = document.getElementById("salesChart").getContext("2d");
+
+    // MULTI-COLOR BAR COLORS
+    const barColors = [
+        "#FF6B6B",  // Jan - Red
+        "#6BCB77",  // Feb - Green
+        "#4D96FF",  // Mar - Blue
+        "#FFD93D",  // Apr - Yellow
+        "#9D4EDD",  // May - Purple
+        "#FF9F1C",  // Jun - Orange
+        "#00C6A7",  // Jul - Aqua
+        "#F15BB5",  // Aug - Pink
+        "#00BBF9",  // Sep - Sky Blue
+        "#A3A1F7",  // Oct - Lavender
+        "#FF6F91",  // Nov - Rose
+        "#845EC2"   // Dec - Violet
+    ];
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Monthly Sales",
+                data: values,
+                backgroundColor: barColors,
+                borderColor: "#fff",
+                borderWidth: 2,
+                borderRadius: 18,          // Rounded bars
+                hoverBackgroundColor: barColors.map(c => c + "CC"),
+                hoverBorderColor: "#000",
+                hoverBorderWidth: 3,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#333",
+                        font: { size: 16, weight: "bold" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(0,0,0,0.85)",
+                    titleColor: "#fff",
+                    bodyColor: "#fff",
+                    padding: 12,
+                    borderWidth: 2,
+                    borderColor: "#fff",
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "#000", font: { size: 13 } },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: { color: "#000", font: { size: 13 } },
+                    grid: { color: "rgba(0,0,0,0.1)" },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+
+
+</body>
+</html> {% endcomment %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales Chart</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+
+    </style>
+</head>
+
+<body class="bg-light">
+{% include 'navbar.html' %}
+
+<!-- HEADER CARD -->
+<div class="container mt-4">
+  <div class="card shadow-lg border-0"
+       style="border-radius: 18px; background: linear-gradient(135deg, #0A3D62, #1B98F5);">
+      
+      <div class="card-body text-center text-white p-5">
+
+          <h2 class="fw-bold mb-2">
+              👋 Welcome Mr. {{ request.user.username|title }}!
+          </h2>
+
+          <p class="fs-5 mb-0">
+              You are logged into <span class="fw-semibold">MedX Billing System</span>.
+          </p>
+
+      </div>
+  </div>
+</div>
+
+
+<!-- MONTHLY SALES BAR CHART -->
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h3 class="text-center text-primary fw-semibold  mb-3">CURRENT YEAR SALES</h3>
+        <canvas id="salesChart" style="height:300px !important;"></canvas>
+    </div>
+</div>
+
+<div class="container mt-4 mb-4" style="max-width: 700px;">
+    <div class="card shadow p-4" style="border-radius: 20px;">
+        <h4 class="text-center fw-semibold text-primary mb-3">BILLERS PERFORMANCE</h4>
+
+        <div class="d-flex justify-content-center">
+            <div style="width:300px; height:400px;">
+                <canvas id="billerChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------------------------
+        BAR CHART DATA
+    ---------------------------- */
+    let labels = [
+        {% for i in labels %}
+            "{{ i }}",
+        {% endfor %}
+    ];
+
+    let values = [
+        {% for i in values %}
+            {{ i }},
+        {% endfor %}
+    ];
+
+    const barColors = [
+        "#FF6B6B", "#6BCB77", "#4D96FF", "#FFD93D", "#9D4EDD", "#FF9F1C",
+        "#00C6A7", "#F15BB5", "#00BBF9", "#A3A1F7", "#FF6F91", "#845EC2"
+    ];
+
+    new Chart(document.getElementById("salesChart"), {
+        type: "bar",
+        data: {
+            labels: labels,   // e.g., ["Jan", "Feb", "Mar"]
+            datasets: [{
+                label: "Monthly Sales",
+                data: values,   // e.g., [1000, 1500, 1200]
+                backgroundColor: barColors,
+                borderColor: "#fff",
+                borderWidth: 2,
+                borderRadius: 18,
+                hoverBackgroundColor: barColors.map(c => c + "CC"),
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw; // raw data value
+                            return "₹ " + value.toLocaleString(); // add ₹ and comma formatting
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: function(value) {
+                            return "₹ " + value.toLocaleString(); // y-axis labels with ₹
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+
+    /* ---------------------------
+        PIE CHART DATA
+    ---------------------------- */
+        let billerLabels = [
+            {% for b in biller_labels %}
+                "{{ b }}",
+            {% endfor %}
+        ];
+    
+        let billerValues = [
+            {% for b in biller_values %}
+                {{ b }} ,
+            {% endfor %}
+        ];
+    
+        let pieColors = [
+            "#4D96FF", "#6BCB77", "#FFC75F", "#F15BB5",
+            "#845EC2", "#FF6F91", "#2C73D2", "#00C9A7"
+        ];
+    
+        new Chart(document.getElementById("billerChart"), {
+            type: "doughnut",
+            data: {
+                labels: billerLabels,
+                datasets: [{
+                    data: billerValues,
+                    backgroundColor: pieColors,
+                    hoverBackgroundColor: pieColors.map(c => c + "CC"),
+                    borderWidth: 3,
+                    borderColor: "#fff",
+                    hoverOffset: 14,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "55%",   // doughnut style
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: "circle",
+                            padding: 16,
+                            font: { size: 13 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw; // get raw value
+                                let label = context.label || '';
+                                return " ₹ " + value.toLocaleString(); // add ₹
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: true
+                }
+            }
+        });
+        
+    </script>
+    
+</script>
+
+</body>
+</html>

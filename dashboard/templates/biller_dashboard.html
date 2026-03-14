@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        .sales-card {
+            border-radius: 18px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ffffff, #eef2ff);
+            box-shadow: 0 5px 18px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+        .sales-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+        }
+        .big-amount {
+            font-size: 42px;
+            font-weight: 800;
+        }
+        .percent-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+    {% include 'navbar.html' %}
+    <div class="container mt-4">
+      <div class="card shadow-lg border-0" 
+           style="border-radius: 18px; background: linear-gradient(135deg, #0A3D62, #1B98F5);">
+          
+          <div class="card-body text-center text-white p-5">
+  
+              <h2 class="fw-bold mb-2">
+                  👋 Welcome Mr. {{ request.user.username|title }}!
+              </h2>
+  
+              <p class="fs-5 mb-0">
+                  You are logged into <span class="fw-semibold">Med-X Billing System</span>.
+              </p>
+  
+          </div>
+      </div>
+  </div>
+<!-- =============== SALES COMPARISON CARD =============== -->
+<div class="container mt-4">
+    <div class="row justify-content-center g-4">
+
+        <div class="col-md-6">
+            <div class="sales-card text-center">
+
+                <h5 class="text-muted mb-2 text-primary">Sales Comparison</h5>
+
+                <!-- TODAY SALES AMOUNT -->
+                <div class="big-amount text-primary" id="todayAmount">
+                    ₹ {{ today_sales }}
+                </div>
+                <p class="text-secondary mb-1">Today's Sales</p>
+
+                <!-- YESTERDAY SALES -->
+                <div class="text-muted mb-3" id="yesterdayAmount">
+                    Yesterday: ₹ {{ yesterday_sales }}
+                </div>
+
+                <hr>
+
+                <!-- PERCENTAGE & MESSAGE -->
+                <div id="percentBox" class="percent-text"></div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- =============== JAVASCRIPT FOR VALIDATION & COMPARISON =============== -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        // Get values from Django template
+        let todaySales = parseFloat("{{ today_sales }}") || 0;
+        let yesterdaySales = parseFloat("{{ yesterday_sales }}") || 0;
+
+        let percentBox = document.getElementById("percentBox");
+
+        // Validation: ensure numbers
+        if (isNaN(todaySales) || isNaN(yesterdaySales)) {
+            percentBox.innerHTML = `
+                <span class="text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> Invalid sales data
+                </span>
+            `;
+            return;
+        }
+
+        let percentageChange = 0;
+
+        // Avoid division by zero
+        if (yesterdaySales > 0) {
+            percentageChange = ((todaySales - yesterdaySales) / yesterdaySales) * 100;
+        }
+
+        percentageChange = percentageChange.toFixed(2);
+
+        // Decide arrow & color
+        if (percentageChange > 0) {
+            percentBox.innerHTML = `
+                <span class="text-success">
+                    <i class="bi bi-arrow-up-circle-fill"></i>
+                    +${percentageChange}% <br>
+                    <small class="text-success">Better than yesterday</small>
+                </span>
+            `;
+        } else if (percentageChange < 0) {
+            percentBox.innerHTML = `
+                <span class="text-danger">
+                    <i class="bi bi-arrow-down-circle-fill"></i>
+                    ${percentageChange}% <br>
+                    <small class="text-danger">Lower than yesterday</small>
+                </span>
+            `;
+        } else {
+            percentBox.innerHTML = `
+                <span class="text-secondary">
+                    <i class="bi bi-dash-circle"></i>
+                    No Change
+                </span>
+            `;
+        }
+    });
+</script>
+
+</body>
+</html>

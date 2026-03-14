@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login / Logout History</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- DataTables -->
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .container { max-width: 900px; }
+
+    h2 { color: #0d6efd; }
+
+    .btn-green {
+      background-color: #198754 !important;
+      color: white !important;
+    }
+    .btn-green:hover {
+      background-color: #157347 !important;
+    }
+
+    .card {
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.20);
+    }
+
+    table thead th {
+      background: #0d6efd !important;
+      color: white !important;
+      text-align: center;
+    }
+    table tbody td {
+      text-align: center;
+    }
+
+    #historyTable_filter,
+    #historyTable_length {
+      display: none;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+{% include 'navbar.html' %}
+
+<div class="container py-4">
+  <div class="card">
+    <div class="card-body m-4">
+
+      <!-- TITLE CENTER + BUTTON RIGHT -->
+      <div class="row align-items-center mb-3">
+        <div class="col-4"></div>
+
+        <div class="col-4 text-center">
+          <h2 class="fw-bold mb-0 text-primary">LOGIN HISTORY</h2>
+        </div>
+
+        <div class="col-4 text-end">
+          <button id="downloadPdf" class="btn btn-green btn-sm">
+            Download PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER + SEARCH -->
+      <div class="row mb-3 mt-2">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Filter by Type</label>
+          <select id="typeFilter" class="form-select">
+            <option value="">All Types</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+          </select>
+        </div>
+
+        <div class="col-md-8">
+          <label class="form-label fw-bold">Search</label>
+          <input type="text" id="globalSearch" class="form-control" placeholder="Search all fields">
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-responsive">
+        <table id="historyTable" class="table table-bordered table-hover align-middle">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Date & Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in history %}
+            <tr>
+              <td></td>
+              <td>
+                {% if h.user %}
+                  {{ h.user.get_full_name|default:h.user.username }}
+                {% else %}
+                  {{ h.name|default:"-" }}
+                {% endif %}
+              </td>
+              <td class="text-capitalize">{{ h.log_type }}</td>
+              <td>{{ h.date }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- jsPDF + autoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+$(document).ready(function () {
+
+  // DataTable init
+  var table = $('#historyTable').DataTable({
+    pageLength: 20,
+    order: [[3, "desc"]],
+    columnDefs: [{ orderable: false, targets: 0 }]
+  });
+
+  // Auto numbering
+  table.on('order.dt search.dt', function () {
+    table.column(0).nodes().each(function (cell, i) {
+      cell.innerHTML = i + 1;
+    });
+  }).draw();
+
+  // Search
+  $('#globalSearch').keyup(function () {
+    table.search(this.value).draw();
+  });
+
+  // Filter
+  $('#typeFilter').change(function () {
+    table.column(2).search(this.value).draw();
+  });
+
+  // PDF DOWNLOAD (YOUR REQUIRED OUTPUT)
+  $('#downloadPdf').on('click', function () {
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(14);
+    doc.text("Login / Logout History", 14, 15);
+
+    doc.autoTable({
+      html: '#historyTable',
+      startY: 20,
+      theme: 'grid',
+      styles: {
+        halign: 'center',
+        fontSize: 10
+      },
+      headStyles: {
+        fillColor: [40, 167, 69], // GREEN HEADER
+        textColor: 255
+      }
+    });
+
+    doc.save('login_logout_history.pdf');
+  });
+
+});
+</script>
+
+</body>
+</html>

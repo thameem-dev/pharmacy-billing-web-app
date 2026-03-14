@@ -1,0 +1,18 @@
+{% include 'navbar.html' %}
+<div class="container mt-4">
+  <div class="card shadow-lg border-0" 
+       style="border-radius: 18px; background: linear-gradient(135deg, #0A3D62, #1B98F5);">
+      
+      <div class="card-body text-center text-white p-5">
+
+          <h2 class="fw-bold mb-2">
+              👋 Welcome Mr. {{ request.user.username|title }}!
+          </h2>
+
+          <p class="fs-5 mb-0">
+              You are logged into <span class="fw-semibold">MedX Billing System</span>.
+          </p>
+
+      </div>
+  </div>
+</div>
