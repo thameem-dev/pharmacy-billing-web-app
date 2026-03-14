@@ -1,1 +1,0 @@
-web: gunicorn pharmacy_billing_web_app.wsgi
